@@ -3,9 +3,7 @@
 클라이언트가 Reverse Proxy에 요청하면,
 Reverse Proxy가 관련 요청에 따라 적절한 내부 서버에 접속하여 결과를 받은 후 클라이언트에 전달
 
-### 설정 방법
-
-`nginx.conf` 파일 `http` 블럭 수정
+### 설정 방법 (1) — `nginx.conf` 직접 수정
 
 ```nginx
 worker_processes  1;
@@ -53,6 +51,31 @@ http {
 - **요청**: `http://localhost/api/users`
 - **전달**: `http://localhost:8080/api/users`로 프록시
 - **응답**: 백엔드에서 처리 후 결과를 클라이언트에 반환
+
+
+### 설정 방법 (2) — `/etc/nginx/sites-available/default` 수정
+
+```nginx
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	root /var/www/html;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header Host $http_host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;		
+		proxy_set_header X-NginX-Proxy true;
+
+		proxy_pass http://<IP>:<Port>; # reverse_proxy 적용할 IP, Port
+	}
+}
+```
 
 ### 설정 적용
 ```bash
